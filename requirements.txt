@@ -1,0 +1,13 @@
+--find-links https://download.pytorch.org/whl/cu110/torch_stable.html
+dill
+matplotlib
+numpy
+pyyaml
+requests
+tensorboard
+torch>=1.7.1+cu110
+torchvision>=0.8.2+cu110
+lightning
+datasets
+wandb
+tqdm
