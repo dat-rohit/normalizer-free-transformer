@@ -1,5 +1,4 @@
 import argparse
-import math
 from pathlib import Path
 
 import PIL
@@ -89,6 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained', type=Path, help='Path to pre-trained weights in haiku format', required=True)
     parser.add_argument('--batch-size', type=int, help='Validation batch size', default=50)
     parser.add_argument('--device', type=str, help='Validation device. Either \'cuda:0\' or \'cpu\'', default='cuda:0')
+    parser.add_argument('--model-type', type=str, help='Type of model to train', default='nfnet')
     args = parser.parse_args()
 
     if not args.pretrained.exists():
@@ -96,6 +96,11 @@ if __name__ == '__main__':
 
     with args.config.open() as file:
         config = yaml.safe_load(file)
+
+    # Override config.yaml settings with command line settings
+    for arg in vars(args):
+        if getattr(args, arg) is not None:
+            config[arg] = getattr(args, arg)
 
     model = pretrained_nfnet(args.pretrained, config)
 

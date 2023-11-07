@@ -14,12 +14,12 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms.transforms import Compose, Normalize, Resize, ToTensor, RandomHorizontalFlip
 from tqdm import tqdm
 
-from src.nfnets.model import NFNet
+from src.nfnets.model import NFNet, NFNet_BN
 from src.nfnets.optim import SGD_AGC
 
 
 def train(config: dict) -> None:
-    wandb.init(project="normalizer-free-transformers", entity="wade3han", name="NFNet")
+    wandb.init(project="normalizer-free-transformers", entity="wade3han", name=config['model_type'])
     torch.set_float32_matmul_precision('high')
 
     fabric = Fabric(accelerator="cuda", devices=1, precision="16-mixed")
@@ -27,7 +27,15 @@ def train(config: dict) -> None:
 
     fabric.launch()
 
-    model = NFNet(
+    model_type = config.get('model_type')
+    if model_type == 'nfnet':
+        model_class = NFNet
+    elif model_type == 'nfnet_bn':
+        model_class = NFNet_BN
+    else:
+        raise NotImplementedError
+
+    model = model_class(
         num_classes=config['num_classes'],
         variant=config['variant'],
         stochdepth_rate=config['stochdepth_rate'],
@@ -209,6 +217,7 @@ def train(config: dict) -> None:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train NFNets.')
     parser.add_argument('--config', type=Path, help='Path to config.yaml', default='default_config.yaml')
+    parser.add_argument('--model-type', type=str, help='Type of model to train', default='nfnet')
     args = parser.parse_args()
 
     if not args.config.exists():
@@ -220,7 +229,7 @@ if __name__ == '__main__':
 
     # Override config.yaml settings with command line settings
     for arg in vars(args):
-        if getattr(args, arg) is not None and arg in config:
+        if getattr(args, arg) is not None:
             config[arg] = getattr(args, arg)
 
     train(config=config)
