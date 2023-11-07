@@ -31,11 +31,18 @@ class Pad32CenterCrop(nn.Module):
 
 
 def test_on_dataset(model: NFNet, dataset_name: str, batch_size=50, device='cuda:0'):
+    if config['dataset'] == 'cifar10':
+        normalize = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.247, 0.243, 0.261])
+    elif config['dataset'] == 'cifar100':
+        normalize = Normalize(mean=[0.5071, 0.4867, 0.4408], std=[0.2675, 0.2565, 0.2761])
+    else:
+        raise NotImplementedError
+
     transforms = Compose([
         # Pad32CenterCrop(model.test_imsize),
         ToTensor(),
         Resize((model.test_imsize, model.test_imsize), PIL.Image.BICUBIC),
-        Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        normalize,
     ])
 
     def transform_fn(examples):

@@ -36,11 +36,18 @@ def train(config: dict) -> None:
         activation=config['activation']
     )
 
+    if config['dataset'] == 'cifar10':
+        normalize = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.247, 0.243, 0.261])
+    elif config['dataset'] == 'cifar100':
+        normalize = Normalize(mean=[0.5071, 0.4867, 0.4408], std=[0.2675, 0.2565, 0.2761])
+    else:
+        raise NotImplementedError
+
     transforms = Compose([
         RandomHorizontalFlip(),
         Resize((model.train_imsize, model.train_imsize), PIL.Image.BICUBIC),
         ToTensor(),
-        Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        normalize,
     ])
 
     def transform_fn(examples):
