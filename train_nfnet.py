@@ -44,6 +44,9 @@ def train(config: dict) -> None:
         activation=config['activation']
     )
 
+    sum_of_params = sum(p.numel() for p in model.parameters())
+    print(f"Model has {sum_of_params} parameters.")
+
     if config['dataset'] == 'cifar10':
         normalize = Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.247, 0.243, 0.261])
     elif config['dataset'] == 'cifar100':

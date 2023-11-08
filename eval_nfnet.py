@@ -65,6 +65,10 @@ def test_on_dataset(model: NFNet, dataset_name: str, batch_size=50, device='cuda
     model.to(device)
     model.eval()
 
+    # print number of model params
+    sum_of_params = sum(p.numel() for p in model.parameters())
+    print(f"Model has {sum_of_params} parameters.")
+
     processed_imgs = 0
     correct_labels = 0
     for step, data in enumerate(dataloader):
