@@ -69,8 +69,8 @@ def test_on_dataset(model: NFNet, dataset_name: str, batch_size=50, device='cuda
     correct_labels = 0
     for step, data in enumerate(dataloader):
         with torch.no_grad():
-            inputs = data[0].to(device)
-            targets = data[1].to(device)
+            inputs = data["img"].to(device)
+            targets = data["label"].to(device)
 
             output = model(inputs).type(torch.float32)
 

@@ -202,7 +202,7 @@ def train(config: dict) -> None:
             wandb.log({"validation/accuracy_per_epoch": 100.0 * correct_labels / processed_imgs})
 
         # save models
-        if epoch % 10 == 0 and epoch != 0:
+        if epoch % 10 == 9:
             cp_path = checkpoints_dir / ("checkpoint_epoch" + str(epoch + 1) + ".pth")
 
             torch.save({
