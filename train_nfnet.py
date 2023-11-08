@@ -221,6 +221,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train NFNets.')
     parser.add_argument('--config', type=Path, help='Path to config.yaml', default='default_config.yaml')
     parser.add_argument('--model-type', type=str, help='Type of model to train', default='nfnet')
+    parser.add_argument('--seed', type=int, help='Random seed', default=None)
     args = parser.parse_args()
 
     if not args.config.exists():
