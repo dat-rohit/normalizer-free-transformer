@@ -49,7 +49,7 @@ def test_on_dataset(model: NFNet, dataset_name: str, batch_size=50, device='cuda
         label = [label for label in examples["label"]]
         return {"img": img, "label": label}
 
-    dataset = load_dataset(dataset_name, split="train[:90%]")
+    dataset = load_dataset(dataset_name, split="test")
     dataset.set_transform(transform_fn)
 
     dataloader = DataLoader(
@@ -60,7 +60,7 @@ def test_on_dataset(model: NFNet, dataset_name: str, batch_size=50, device='cuda
         num_workers=8,
     )
 
-    print(f"Validation set contains {len(dataset)} images.")
+    print(f"Test set contains {len(dataset)} images.")
 
     model.to(device)
     model.eval()
