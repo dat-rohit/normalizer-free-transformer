@@ -28,7 +28,6 @@ from models import *
 from utils import progress_bar
 from randomaug import RandAugment
 from models.vit import ViT
-from models.convmixer import ConvMixer
 
 # parsers
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -122,8 +121,8 @@ print('==> Building model..')
 # net = VGG('VGG19')
 if args.net=='res18':
     net = ResNet18()
-elif args.net=='vgg':
-    net = VGG('VGG19')
+# elif args.net=='vgg':
+#     net = VGG('VGG19')
 elif args.net=='res34':
     net = ResNet34()
 elif args.net=='res50':
@@ -154,62 +153,62 @@ elif args.net=="vit_ti":
     dropout = 0.1,
     emb_dropout = 0.1
 )
-elif args.net=="vit_small":
-    from models.vit_small import ViT
-    net = ViT(
-    image_size = size,
-    patch_size = args.patch,
-    num_classes = num_classes,
-    dim = 384,
-    depth = 12,
-    heads = 6,
-    mlp_dim = 1536,
-    dropout = 0.1,
-    emb_dropout = 0.1
-)
-elif args.net=="simplevit":
-    from models.simplevit import SimpleViT
-    net = SimpleViT(
-    image_size = size,
-    patch_size = args.patch,
-    num_classes = 10,
-    dim = int(args.dimhead),
-    depth = 6,
-    heads = 8,
-    mlp_dim = 512
-)
-elif args.net=="vit":
-    # ViT for cifar10
-    net = ViT(
-    image_size = size,
-    patch_size = args.patch,
-    num_classes = 10,
-    dim = int(args.dimhead),
-    depth = 6,
-    heads = 8,
-    mlp_dim = 512,
-    dropout = 0.1,
-    emb_dropout = 0.1
-)
-elif args.net=="vit_timm":
-    import timm
-    net = timm.create_model("vit_base_patch16_384", pretrained=True)
-    net.head = nn.Linear(net.head.in_features, 10)
-elif args.net=="cait":
-    from models.cait import CaiT
-    net = CaiT(
-    image_size = size,
-    patch_size = args.patch,
-    num_classes = 10,
-    dim = int(args.dimhead),
-    depth = 6,   # depth of transformer for patch to patch attention only
-    cls_depth=2, # depth of cross attention of CLS tokens to patch
-    heads = 8,
-    mlp_dim = 512,
-    dropout = 0.1,
-    emb_dropout = 0.1,
-    layer_dropout = 0.05
-)
+# elif args.net=="vit_small":
+#     from models.vit_small import ViT
+#     net = ViT(
+#     image_size = size,
+#     patch_size = args.patch,
+#     num_classes = num_classes,
+#     dim = 384,
+#     depth = 12,
+#     heads = 6,
+#     mlp_dim = 1536,
+#     dropout = 0.1,
+#     emb_dropout = 0.1
+# )
+# elif args.net=="simplevit":
+#     from models.simplevit import SimpleViT
+#     net = SimpleViT(
+#     image_size = size,
+#     patch_size = args.patch,
+#     num_classes = 10,
+#     dim = int(args.dimhead),
+#     depth = 6,
+#     heads = 8,
+#     mlp_dim = 512
+# )
+# elif args.net=="vit":
+#     # ViT for cifar10
+#     net = ViT(
+#     image_size = size,
+#     patch_size = args.patch,
+#     num_classes = 10,
+#     dim = int(args.dimhead),
+#     depth = 6,
+#     heads = 8,
+#     mlp_dim = 512,
+#     dropout = 0.1,
+#     emb_dropout = 0.1
+# )
+# elif args.net=="vit_timm":
+#     import timm
+#     net = timm.create_model("vit_base_patch16_384", pretrained=True)
+#     net.head = nn.Linear(net.head.in_features, 10)
+# elif args.net=="cait":
+#     from models.cait import CaiT
+#     net = CaiT(
+#     image_size = size,
+#     patch_size = args.patch,
+#     num_classes = 10,
+#     dim = int(args.dimhead),
+#     depth = 6,   # depth of transformer for patch to patch attention only
+#     cls_depth=2, # depth of cross attention of CLS tokens to patch
+#     heads = 8,
+#     mlp_dim = 512,
+#     dropout = 0.1,
+#     emb_dropout = 0.1,
+#     layer_dropout = 0.05
+# )
 
 # For Multi-GPU
 if 'cuda' in device:

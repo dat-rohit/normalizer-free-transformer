@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from models.vgg import *
+# from models.vgg import *
 #from dpn import *
 #from lenet import *
 #from senet import *
