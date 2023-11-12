@@ -18,7 +18,9 @@ from src.vit.model import ViT, ViTPostNorm, ViTWithoutNorm
 
 
 def train(config: dict) -> None:
-    wandb.init(project="normalizer-free-transformers", entity="wade3han", name=config['model_type'])
+    wandb.init(project="normalizer-free-transformers",
+               entity="wade3han",
+               name=config['model_type'] + f'lr-{config["learning_rate"]}')
     torch.set_float32_matmul_precision('high')
 
     fabric = Fabric(accelerator="cuda", devices=1, precision="16-mixed")

@@ -12,6 +12,8 @@ from datasets import load_dataset
 from torch.utils.data.dataloader import DataLoader
 from torchvision.transforms.transforms import Compose, Normalize, ToTensor
 
+from src.vit.model import ViT, ViTPostNorm, ViTWithoutNorm
+
 
 # Evaluation method used in the paper
 # This seems to perform slightly worse than a simple resize
@@ -88,7 +90,7 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained', type=Path, help='Path to pre-trained weights in haiku format', required=True)
     parser.add_argument('--batch-size', type=int, help='Validation batch size', default=50)
     parser.add_argument('--device', type=str, help='Validation device. Either \'cuda:0\' or \'cpu\'', default='cuda:0')
-    parser.add_argument('--model-type', type=str, help='Type of model to train', default='nfnet')
+    parser.add_argument('--model-type', type=str, help='Type of model to train', default='vit')
     args = parser.parse_args()
 
     if not args.pretrained.exists():
@@ -102,6 +104,35 @@ if __name__ == '__main__':
         if getattr(args, arg) is not None:
             config[arg] = getattr(args, arg)
 
-    model = pretrained_nfnet(args.pretrained, config)
+    if config['dataset'] == 'cifar10':
+        size = 32
+        num_classes = 10
+    elif config['dataset'] == 'cifar100':
+        size = 32
+        num_classes = 100
+    else:
+        raise NotImplementedError
+
+    model_type = config.get('model_type')
+    if model_type == 'vit':
+        model_class = ViT
+    elif model_type == 'vit_postnorm':
+        model_class = ViTPostNorm
+    elif model_type == 'vit_nonorm':
+        model_class = ViTWithoutNorm
+    else:
+        raise NotImplementedError
+
+    model = model_class(
+        image_size=size,
+        patch_size=4,
+        num_classes=num_classes,
+        dim=384,
+        depth=12,
+        heads=6,
+        mlp_dim=1536,
+        dropout=0.1,
+        emb_dropout=0.1
+    )
 
     test_on_dataset(model, dataset_name=args.dataset_name, batch_size=args.batch_size, device=args.device)
