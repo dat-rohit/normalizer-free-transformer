@@ -82,6 +82,8 @@ class Transformer(nn.Module):
     def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout=0., normalization='Pre'):
         super().__init__()
         self.layers = nn.ModuleList([])
+        self.norms = nn.ModuleList([])
+        self.normalization = normalization
         if normalization == 'Pre':
             for _ in range(depth):
                 self.layers.append(nn.ModuleList([
@@ -89,7 +91,16 @@ class Transformer(nn.Module):
                     PreNorm(dim, FeedForward(dim, mlp_dim, dropout=dropout))
                 ]))
         elif normalization == 'Post':
-            raise NotImplementedError
+            for _ in range(depth):
+                self.layers.append(nn.ModuleList([
+                    NoNorm(Attention(dim, heads=heads, dim_head=dim_head, dropout=dropout)),
+                    NoNorm(FeedForward(dim, mlp_dim, dropout=dropout))
+                ]))
+                self.norms.append(nn.ModuleList([
+                    nn.LayerNorm(dim),
+                    nn.LayerNorm(dim),
+                ]))
+
         elif normalization == 'No':
             for _ in range(depth):
                 self.layers.append(nn.ModuleList([
@@ -98,9 +109,14 @@ class Transformer(nn.Module):
                 ]))
 
     def forward(self, x):
-        for attn, ff in self.layers:
-            x = attn(x) + x
-            x = ff(x) + x
+        if self.normalization == 'Post':
+            for (attn, ff), (norm1, norm2) in zip(self.layers, self.norms):
+                x = norm1(attn(x) + x)
+                x = norm2(ff(x) + x)
+        else:
+            for attn, ff in self.layers:
+                x = attn(x) + x
+                x = ff(x) + x
         return x
 
 
