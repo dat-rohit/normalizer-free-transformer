@@ -14,7 +14,7 @@ from torchvision.transforms.transforms import Compose, Normalize, ToTensor, Rand
 from tqdm import tqdm
 
 from src.nfnets.optim import SGD_AGC
-from src.vit.model import ViT, ViT_PostNorm
+from src.vit.model import ViT, ViTPostNorm, ViTWithoutNorm
 
 
 def train(config: dict) -> None:
@@ -30,7 +30,9 @@ def train(config: dict) -> None:
     if model_type == 'vit':
         model_class = ViT
     elif model_type == 'vit_postnorm':
-        model_class = ViT_PostNorm
+        model_class = ViTPostNorm
+    elif model_type == 'vit_nonorm':
+        model_class = ViTWithoutNorm
     else:
         raise NotImplementedError
 
@@ -109,17 +111,6 @@ def train(config: dict) -> None:
         weight_decay=config['weight_decay'],
         nesterov=config['nesterov']
     )
-
-    # Find desired parameters and exclude them
-    # from weight decay and clipping
-    for group in optimizer.param_groups:
-        name = group['name']
-
-        if model.exclude_from_weight_decay(name):
-            group['weight_decay'] = 0
-
-        if model.exclude_from_clipping(name):
-            group['clipping'] = None
 
     criterion = nn.CrossEntropyLoss()
 
