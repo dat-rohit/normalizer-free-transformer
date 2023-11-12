@@ -14,7 +14,7 @@ from torchvision.transforms.transforms import Compose, Normalize, ToTensor, Rand
 from tqdm import tqdm
 
 from src.nfnets.optim import SGD_AGC
-from vit_normal.models.vit import ViT, ViT_PostNorm
+from src.vit.model import ViT, ViT_PostNorm
 
 
 def train(config: dict) -> None:
@@ -225,8 +225,9 @@ def train(config: dict) -> None:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train NFTs.')
     parser.add_argument('--config', type=Path, help='Path to config.yaml', default='default_config.yaml')
-    parser.add_argument('--model-type', type=str, help='Type of model to train', default='nfnet')
+    parser.add_argument('--model-type', type=str, help='Type of model to train', default='vit')
     parser.add_argument('--seed', type=int, help='Random seed', default=None)
+    parser.add_argument('--learning-rate', type=float, help='Learning rate', default=None)
     args = parser.parse_args()
 
     if not args.config.exists():
