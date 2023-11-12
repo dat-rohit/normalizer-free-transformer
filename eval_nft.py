@@ -116,10 +116,13 @@ if __name__ == '__main__':
     model_type = config.get('model_type')
     if model_type == 'vit':
         model_class = ViT
+        print("Using ViT model")
     elif model_type == 'vit_postnorm':
         model_class = ViTPostNorm
+        print("Using ViTPostNorm model")
     elif model_type == 'vit_nonorm':
         model_class = ViTWithoutNorm
+        print("Using ViTWithoutNorm model")
     else:
         raise NotImplementedError
 
@@ -134,5 +137,7 @@ if __name__ == '__main__':
         dropout=0.1,
         emb_dropout=0.1
     )
+    state_dict = torch.load(args.pretrained, map_location='cpu')
+    model.load_state_dict(state_dict['model'])
 
     test_on_dataset(model, dataset_name=args.dataset_name, batch_size=args.batch_size, device=args.device)
