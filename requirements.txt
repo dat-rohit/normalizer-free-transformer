@@ -11,3 +11,4 @@ lightning
 datasets
 wandb
 tqdm
+einops
