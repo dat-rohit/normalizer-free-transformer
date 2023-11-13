@@ -84,8 +84,8 @@ class WSLinear(nn.Linear):
                  device=None, dtype=None) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
 
-        # self.gain = nn.Parameter(torch.ones(self.out_features, 1))
-        self.gain = nn.Parameter(torch.ones(1, self.in_features))
+        self.gain = nn.Parameter(torch.ones(self.out_features, 1))
+        # self.gain = nn.Parameter(torch.ones(1, self.in_features))
         self.register_buffer('eps', torch.tensor(1e-4, requires_grad=False), persistent=False)
         self.register_buffer('fan_in',
                              torch.tensor(self.weight.shape[:1].numel(), requires_grad=False).type_as(self.weight),
