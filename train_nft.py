@@ -14,7 +14,7 @@ from torchvision.transforms.transforms import Compose, Normalize, ToTensor, Rand
 from tqdm import tqdm
 
 from src.nfnets.optim import SGD_AGC
-from src.vit.model import ViT, ViTPostNorm, ViTWithoutNorm
+from src.vit.model import ViT, ViTPostNorm, ViTWithoutNorm, ViTWS
 
 
 def train(config: dict) -> None:
@@ -35,6 +35,8 @@ def train(config: dict) -> None:
         model_class = ViTPostNorm
     elif model_type == 'vit_nonorm':
         model_class = ViTWithoutNorm
+    elif model_type == 'vit_ws':
+        model_class = ViTWS
     else:
         raise NotImplementedError
 
