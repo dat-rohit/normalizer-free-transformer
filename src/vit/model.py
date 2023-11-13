@@ -85,14 +85,13 @@ class WSLinear(nn.Linear):
         super().__init__(in_features, out_features, bias, device, dtype)
 
         nn.init.xavier_normal_(self.weight)
-        self.gain = nn.Parameter(torch.ones(1, self.out_features))
+        self.gain = nn.Parameter(torch.ones(self.out_features, 1))
         self.register_buffer('eps', torch.tensor(1e-4, requires_grad=False), persistent=False)
         self.register_buffer('fan_in',
                              torch.tensor(self.weight.shape[1:].numel(), requires_grad=False).type_as(self.weight),
                              persistent=False)
 
     def standardized_weights(self):
-        # Original code: HWCN
         mean = torch.mean(self.weight, axis=[1], keepdims=True)
         var = torch.var(self.weight, axis=[1], keepdims=True)
         scale = torch.rsqrt(torch.maximum(var * self.fan_in, self.eps))
