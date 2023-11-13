@@ -84,7 +84,6 @@ class WSLinear(nn.Linear):
                  device=None, dtype=None) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
 
-        nn.init.xavier_normal_(self.weight)
         self.gain = nn.Parameter(torch.ones(self.out_features, 1))
         self.register_buffer('eps', torch.tensor(1e-4, requires_grad=False), persistent=False)
         self.register_buffer('fan_in',
