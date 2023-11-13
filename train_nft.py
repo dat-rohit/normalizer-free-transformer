@@ -18,9 +18,11 @@ from src.vit.model import ViT, ViTPostNorm, ViTWithoutNorm, ViTWS
 
 
 def train(config: dict) -> None:
+    wandb_name = config['model_type'] + f'lr-{config["learning_rate"]}' if not config['do_clip'] else \
+        config['model_type'] + f'lr-{config["learning_rate"]}-clip'
     wandb.init(project="normalizer-free-transformers",
                entity="wade3han",
-               name=config['model_type'] + f'lr-{config["learning_rate"]}')
+               name=wandb_name)
     torch.set_float32_matmul_precision('high')
 
     fabric = Fabric(accelerator="cuda", devices=1, precision="16-mixed")
@@ -223,6 +225,7 @@ if __name__ == '__main__':
     parser.add_argument('--model-type', type=str, help='Type of model to train', default='vit')
     parser.add_argument('--seed', type=int, help='Random seed', default=None)
     parser.add_argument('--learning-rate', type=float, help='Learning rate', default=None)
+    parser.add_argument('--do-clip', type=bool, help='Whether to clip gradients', default=None)
     args = parser.parse_args()
 
     if not args.config.exists():
