@@ -95,9 +95,12 @@ transform_test = transforms.Compose([
 
 def transformsTrain(examples):
 
-    examples["pixel_values"] = [transform_train(image) for image in examples["image"]]
+    transformed_examples = {}
 
-    return examples
+    transformed_examples["pixel_values"] = [transform_train(image) for image in examples["image"]]
+    transformed_examples["labels"] = examples["label"]  # Assuming the key for labels is "label," please adjust accordingly
+
+    return transformed_examples
 
 
 
