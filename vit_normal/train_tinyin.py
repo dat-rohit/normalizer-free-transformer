@@ -20,6 +20,8 @@ import torchvision
 import torchvision.transforms as transforms
 from torchvision.transforms import ToTensor
 
+from datasets import load_dataset, Image
+
 import os
 import argparse
 import pandas as pd
@@ -74,56 +76,9 @@ else:
     size = imsize
 
 
-class TinyImageNetDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
-        self.root_dir = root_dir
-        self.transform = transform
 
-        self.images, self.labels = self.load_dataset()
-
-        # Check if the lengths match
-        if len(self.images) != len(self.labels):
-            raise ValueError("Length mismatch between images and labels!")
-
-    def load_dataset(self):
-        images = []
-        labels = {}
-        class_names = os.listdir(self.root_dir)
-
-        for class_label, class_name in enumerate(class_names):
-            class_dir = os.path.join(self.root_dir, class_name, 'images')
-
-            for filename in os.listdir(class_dir):
-                img_path = os.path.join(class_dir, filename)
-                images.append(img_path)
-                labels[img_path] = class_label
-
-        return images, labels
-    
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, idx):
-        if self.is_train:
-            class_name = os.listdir(self.root_dir)[idx]
-            class_dir = os.path.join(self.root_dir, class_name, 'images')
-            image_file = random.choice(os.listdir(class_dir))
-            image_path = os.path.join(class_dir, image_file)
-            label = int(self.labels[class_name])  # Convert label to int
-        else:
-            image_path = os.path.join(self.root_dir, 'images', self.images[idx])
-            label = int(self.labels[self.images[idx]])  # Convert label to int
-
-        # Use PIL to read the image
-        with Image.open(image_path).convert("RGB") as img:
-            if self.transform:
-                img = self.transform(img)
-            else:
-                img = ToTensor()(img)
-
-        return img, label
-
+tiny_imagenet_train = load_dataset('Maysee/tiny-imagenet', split='train')
+dataset_val = load_dataset('Maysee/tiny-imagenet', split='validation')
 
 transform_train = transforms.Compose([
     transforms.RandomResizedCrop(224),
@@ -138,6 +93,43 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
 ])
 
+def transformsTrain(examples):
+
+    examples["pixel_values"] = [transform_train(image) for image in examples["image"]]
+
+    return examples
+
+
+
+
+dataset_train = tiny_imagenet_train.with_transform(transformsTrain)
+
+
+def collate_fn(examples):
+
+    images = []
+
+    labels = []
+
+    for example in examples:
+
+        images.append((example["pixel_values"]))
+
+        labels.append(example["labels"])
+
+        
+
+    pixel_values = torch.stack(images)
+
+    labels = torch.tensor(labels)
+
+    return {"pixel_values": pixel_values, "labels": labels}
+
+dataloaderTrain = DataLoader(dataset_train, collate_fn=collate_fn, batch_size=4)
+dataloaderVal = DataLoader(dataset_val, collate_fn=collate_fn, batch_size=4)
+
+
+'''
 # Prepare dataset
 tiny_imagenet_path_train = '../../tinyimagenet-ViT/TinyImageNet-Transformers/train'
 tiny_imagenet_path_val = '../../tinyimagenet-ViT/TinyImageNet-Transformers/val'
@@ -156,7 +148,7 @@ tiny_imagenet_trainset, tiny_imagenet_valset = torch.utils.data.random_split(tin
 trainloader = torch.utils.data.DataLoader(tiny_imagenet_trainset, batch_size=bs, shuffle=True, num_workers=8)
 valloader = torch.utils.data.DataLoader(tiny_imagenet_valset, batch_size=bs, shuffle=False, num_workers=8)
 testloader = torch.utils.data.DataLoader(tiny_imagenet_test_dataset, batch_size=bs, shuffle=False, num_workers=8)
-
+'''
 classes = [str(i) for i in range(200)]
 
 
@@ -290,7 +282,7 @@ def train(epoch):
     train_loss = 0
     correct = 0
     total = 0
-    for batch_idx, (inputs, targets) in enumerate(trainloader):
+    for batch_idx, (inputs, targets) in enumerate(dataloaderTrain):
         inputs, targets = inputs.to(device), targets.to(device)
         # Train with amp
         with torch.cuda.amp.autocast(enabled=use_amp):
@@ -306,7 +298,7 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+        progress_bar(batch_idx, len(dataloaderTrain), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
         acc = 100.*correct/total
     return train_loss/(batch_idx+1), acc
@@ -319,7 +311,7 @@ def val(epoch):
     correct = 0
     total = 0
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(valloader):
+        for batch_idx, (inputs, targets) in enumerate(dataloaderVal):
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
             loss = criterion(outputs, targets)
@@ -329,7 +321,7 @@ def val(epoch):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(batch_idx, len(valloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+            progress_bar(batch_idx, len(dataloaderVal), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                 % (val_loss/(batch_idx+1), 100.*correct/total, correct, total))
     
     # Save checkpoint.
@@ -351,6 +343,7 @@ def val(epoch):
         appender.write(content + "\n")
     return val_loss/(batch_idx+1), acc
 
+'''
 def test(epoch):
     test_loss = 0
     correct = 0
@@ -370,14 +363,14 @@ def test(epoch):
                 % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
     acc = 100.*correct/total
     return test_loss/(batch_idx+1), acc
-
+'''
 
 net.cuda()
 for epoch in range(start_epoch, args.n_epochs):
     start = time.time()
     train_loss, train_acc = train(epoch)
     val_loss, val_acc = val(epoch)
-    test_loss, test_acc = test(epoch)
+    #test_loss, test_acc = test(epoch)
     
     scheduler.step(epoch-1) # step cosine scheduling
     
@@ -386,8 +379,7 @@ for epoch in range(start_epoch, args.n_epochs):
     print("train_acc", train_acc )
     print('val_loss', val_loss )
     print('val_acc', val_acc )
-    print('test_loss', test_loss )
-    print("test_acc:", test_acc )
+
     print('epoch:', epoch )
     print( "lr:", optimizer.param_groups[0]["lr"])
 
