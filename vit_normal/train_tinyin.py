@@ -58,7 +58,7 @@ args = parser.parse_args()
 usewandb = ~args.nowandb
 if usewandb:
     import wandb
-    watermark = "{}_lr{}".format(args.net, args.lr)
+    watermark = "imgnet_{}_lr{}".format(args.net, args.lr)
     wandb.init(project="cifar10_test",
             name=watermark)
     wandb.config.update(args)
@@ -84,14 +84,14 @@ tiny_imagenet_train = load_dataset('Maysee/tiny-imagenet', split='train')
 tiny_imagenet_val_and_test = load_dataset('Maysee/tiny-imagenet', split='valid')
 
 transform_train = transforms.Compose([
-    transforms.RandomResizedCrop(64),
+    transforms.RandomResizedCrop(size),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
 ])
 
 transform_test = transforms.Compose([
-    transforms.Resize(64),
+    transforms.Resize(size),
     transforms.ToTensor(),
     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
 ])
@@ -349,7 +349,7 @@ for epoch in range(start_epoch, args.n_epochs):
     start = time.time()
     train_loss, train_acc = train(epoch)
     val_loss, val_acc = val(epoch)
-    #test_loss, test_acc = test(epoch)
+    test_loss, test_acc = test(epoch)
     
     scheduler.step(epoch-1) # step cosine scheduling
     
