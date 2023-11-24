@@ -28,6 +28,7 @@ import pandas as pd
 import csv
 import pickle
 import time
+import random
 
 from models import *
 from utils.utils import progress_bar
@@ -376,6 +377,13 @@ def test(epoch):
     return test_loss/(batch_idx+1), acc
 
 net.cuda()
+
+random_number = random.randint(1, 1000)
+
+# Constructing the filename based on model name (args.net), learning rate (args.lr), and random number
+filename = f"{args.net}_lr{args.lr}_rand{random_number}.txt"
+filepath = os.path.join("epoch_info", filename)  # Assuming you want to save in a folder named "epoch_info"
+
 for epoch in range(start_epoch, args.n_epochs):
     start = time.time()
     train_loss, train_acc = train(epoch)
@@ -392,6 +400,17 @@ for epoch in range(start_epoch, args.n_epochs):
 
     print('epoch:', epoch )
     print( "lr:", optimizer.param_groups[0]["lr"])
+
+    # Writing epoch information to the file in append mode
+    with open(filepath, "a") as file:
+        file.write(f'Epoch: {epoch}\n')
+        file.write(f'Train Loss: {train_loss}\n')
+        file.write(f'Train Accuracy: {train_acc}\n')
+        file.write(f'Validation Loss: {val_loss}\n')
+        file.write(f'Validation Accuracy: {val_acc}\n')
+        file.write(f'Learning Rate: {optimizer.param_groups[0]["lr"]}\n')
+        file.write(f'Time taken: {time.time() - start} seconds\n')
+
     '''
 
     # Log training..
