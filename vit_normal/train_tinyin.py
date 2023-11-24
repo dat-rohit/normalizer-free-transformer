@@ -30,9 +30,12 @@ import pickle
 import time
 
 from models import *
-from utils import progress_bar
+from utils.utils import progress_bar
 from randomaug import RandAugment
 from models.vit import ViT
+from models.vit_no_ln import ViT_no_ln
+from models.vit_no_ln_with_init import ViT_no_ln_with_init
+
 
 # parsers
 parser = argparse.ArgumentParser(description='PyTorch Tiny ImageNet Training')
@@ -55,6 +58,7 @@ parser.add_argument('--dataset', default='cifar10', type=str)
 args = parser.parse_args()
 
 # take in args
+'''
 usewandb = ~args.nowandb
 if usewandb:
     import wandb
@@ -62,6 +66,7 @@ if usewandb:
     wandb.init(project="cifar10_test",
             name=watermark)
     wandb.config.update(args)
+'''
 
 bs = int(args.bs)
 imsize = int(args.size)
@@ -147,8 +152,8 @@ elif args.net=="vit_s":
     heads = 6,
     mlp_dim = 1536,
     dropout = 0.1,
-    emb_dropout = 0.1
-)
+    emb_dropout = 0.1)
+
 elif args.net=="vit_ti":
     net = ViT(
     image_size = size,
@@ -159,8 +164,34 @@ elif args.net=="vit_ti":
     heads = 3,
     mlp_dim = 768,
     dropout = 0.1,
-    emb_dropout = 0.1
-)
+    emb_dropout = 0.1)
+
+elif args.net=="vit_no_ln_s":
+    net = ViT_no_ln(
+    image_size = size,
+    patch_size = args.patch,
+    num_classes = num_classes,
+    dim = 384,
+    depth = 12,
+    heads = 6,
+    mlp_dim = 1536,
+    dropout = 0.1,
+    emb_dropout = 0.1)
+
+elif args.net=="vit_no_ln_with_init_s":
+    net = ViT_no_ln_with_init(
+    image_size = size,
+    patch_size = args.patch,
+    num_classes = num_classes,
+    dim = 384,
+    depth = 12,
+    heads = 6,
+    mlp_dim = 1536,
+    dropout = 0.1,
+    emb_dropout = 0.1)
+
+
+
 # elif args.net=="vit_small":
 #     from models.vit_small import ViT
 #     net = ViT(
@@ -361,7 +392,8 @@ for epoch in range(start_epoch, args.n_epochs):
 
     print('epoch:', epoch )
     print( "lr:", optimizer.param_groups[0]["lr"])
-    
+    '''
+
     # Log training..
     if usewandb:
         wandb.log({'epoch': epoch, 'train_loss': train_loss, "train_acc": train_acc, 'val_loss': val_loss, "val_acc": val_acc, 'test_loss': test_loss, "test_acc": test_acc, "lr": optimizer.param_groups[0]["lr"],
@@ -372,5 +404,6 @@ for epoch in range(start_epoch, args.n_epochs):
 # writeout wandb
 if usewandb:
     wandb.save("wandb_{}.h5".format(args.net))
-    
+'''
+ 
     
