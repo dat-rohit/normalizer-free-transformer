@@ -41,7 +41,7 @@ from models.vit_no_ln_with_init import ViT_no_ln_with_init
 # parsers
 parser = argparse.ArgumentParser(description='PyTorch Tiny ImageNet Training')
 parser.add_argument('--lr', default=1e-4, type=float, help='learning rate') # resnets.. 1e-3, Vit..1e-4
-parser.add_argument('--opt', default="adam")
+parser.add_argument('--opt', default="sgd")
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--noaug', action='store_true', help='disable use randomaug')
 parser.add_argument('--noamp', action='store_true', help='disable mixed precision training. for older pytorch versions')
@@ -381,8 +381,9 @@ net.cuda()
 random_number = random.randint(1, 1000)
 
 # Constructing the filename based on model name (args.net), learning rate (args.lr), and random number
-filename = f"{args.net}_lr{args.lr}_rand{random_number}.txt"
+filename = f"opt_{args.opt}_{args.net}_lr{args.lr}_rand{random_number}.txt"
 filepath = os.path.join("epoch_info", filename)  # Assuming you want to save in a folder named "epoch_info"
+os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
 for epoch in range(start_epoch, args.n_epochs):
     start = time.time()
