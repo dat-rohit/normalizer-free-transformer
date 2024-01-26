@@ -29,6 +29,7 @@ import pandas as pd
 import csv
 import pickle
 import time
+import random
 
 from models import *
 from utils.utils import progress_bar
@@ -36,12 +37,11 @@ from randomaug import RandAugment
 from models.vit import ViT
 from models.vit_no_ln_with_init import ViT_no_ln_with_init
 from models.vit_no_ln import ViT_no_ln
-from models.vit_ws import ViT_ws
 
 # parsers
 parser = argparse.ArgumentParser(description='PyTorch Tiny ImageNet Training')
 parser.add_argument('--lr', default=1e-4, type=float, help='learning rate') # resnets.. 1e-3, Vit..1e-4
-parser.add_argument('--opt', default="adam")
+parser.add_argument('--opt', default="sgd")
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--noaug', action='store_true', help='disable use randomaug')
 parser.add_argument('--noamp', action='store_true', help='disable mixed precision training. for older pytorch versions')
@@ -59,6 +59,7 @@ parser.add_argument('--dataset', default='cifar10', type=str)
 args = parser.parse_args()
 
 # take in args
+'''
 usewandb = ~args.nowandb
 if usewandb:
     import wandb
@@ -66,6 +67,7 @@ if usewandb:
     wandb.init(project="cifar10_test",
             name=watermark)
     wandb.config.update(args)
+'''
 
 bs = int(args.bs)
 imsize = int(args.size)
@@ -151,8 +153,8 @@ elif args.net=="vit_s":
     heads = 6,
     mlp_dim = 1536,
     dropout = 0.1,
-    emb_dropout = 0.1
-)
+    emb_dropout = 0.1)
+
 elif args.net=="vit_ti":
     net = ViT(
     image_size = size,
@@ -162,18 +164,6 @@ elif args.net=="vit_ti":
     depth = 12,
     heads = 3,
     mlp_dim = 768,
-    dropout = 0.1,
-    emb_dropout = 0.1
-)
-elif args.net=="vit_ws":
-    net = ViT_ws(
-    image_size = size,
-    patch_size = args.patch,
-    num_classes = num_classes,
-    dim = 384,
-    depth = 12,
-    heads = 6,
-    mlp_dim = 1536,
     dropout = 0.1,
     emb_dropout = 0.1
 )
@@ -199,9 +189,7 @@ elif args.net=="vit_no_ln_with_init_s":
     heads = 6,
     mlp_dim = 1536,
     dropout = 0.1,
-    emb_dropout = 0.1
-)
-    
+    emb_dropout = 0.1)
 # For Multi-GPU
 if 'cuda' in device:
     print(device)
@@ -351,6 +339,14 @@ def test(epoch):
     return test_loss/(batch_idx+1), acc
 
 net.cuda()
+
+random_number = random.randint(1, 1000)
+
+# Constructing the filename based on model name (args.net), learning rate (args.lr), and random number
+filename = f"opt_{args.opt}_{args.net}_lr{args.lr}_rand{random_number}.txt"
+filepath = os.path.join("epoch_info", filename)  # Assuming you want to save in a folder named "epoch_info"
+os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
 for epoch in range(start_epoch, args.n_epochs):
     start = time.time()
     train_loss, train_acc = train(epoch)
@@ -367,7 +363,19 @@ for epoch in range(start_epoch, args.n_epochs):
 
     print('epoch:', epoch )
     print( "lr:", optimizer.param_groups[0]["lr"])
-    
+
+    # Writing epoch information to the file in append mode
+    with open(filepath, "a") as file:
+        file.write(f'Epoch: {epoch}\n')
+        file.write(f'Train Loss: {train_loss}\n')
+        file.write(f'Train Accuracy: {train_acc}\n')
+        file.write(f'Validation Loss: {val_loss}\n')
+        file.write(f'Validation Accuracy: {val_acc}\n')
+        file.write(f'Learning Rate: {optimizer.param_groups[0]["lr"]}\n')
+        file.write(f'Time taken: {time.time() - start} seconds\n')
+
+    '''
+
     # Log training..
     if usewandb:
         wandb.log({'epoch': epoch, 'train_loss': train_loss, "train_acc": train_acc, 'val_loss': val_loss, "val_acc": val_acc, 'test_loss': test_loss, "test_acc": test_acc, "lr": optimizer.param_groups[0]["lr"],
@@ -378,5 +386,6 @@ for epoch in range(start_epoch, args.n_epochs):
 # writeout wandb
 if usewandb:
     wandb.save("wandb_{}.h5".format(args.net))
-    
+'''
+ 
     
