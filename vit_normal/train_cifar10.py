@@ -30,6 +30,7 @@ from randomaug import RandAugment
 from models.vit import ViT
 from models.vit_no_ln import ViT_no_ln
 from models.vit_no_ln_with_init import ViT_no_ln_with_init
+from models.vit_ws import ViT_ws
 from utils.optim import SGD_AGC
 
 # parsers
@@ -180,6 +181,18 @@ elif args.net=="vit_no_ln_with_init_s":
     dropout = 0.1,
     emb_dropout = 0.1
 )
+elif args.net=="vit_ws":
+    net = ViT_ws(
+    image_size = size,
+    patch_size = args.patch,
+    num_classes = num_classes,
+    dim = 384,
+    depth = 12,
+    heads = 6,
+    mlp_dim = 1536,
+    dropout = 0.1,
+    emb_dropout = 0.1
+)
 
 # For Multi-GPU
 if 'cuda' in device:
@@ -212,6 +225,17 @@ elif args.opt == "sgd_momentum":
         lr=args.lr,
         momentum=0.9,
         clipping=None,
+        weight_decay=2e-5,
+        nesterov=True
+    )
+elif args.opt == "sgd_agc":
+    optimizer = SGD_AGC(
+        # The optimizer needs all parameter names
+        # to filter them by hand later
+        named_params=net.named_parameters(),
+        lr=args.lr,
+        momentum=0.9,
+        clipping=0.1,
         weight_decay=2e-5,
         nesterov=True
     )

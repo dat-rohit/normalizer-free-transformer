@@ -1,5 +1,23 @@
 import torch
 from torch.optim import Optimizer
+def unitwise_norm(x):
+    if (len(torch.squeeze(x).shape)) <= 1: # Scalars, vectors
+        axis = 0
+        keepdims = False
+    elif len(x.shape) in [2,3]: # Linear layers
+        # Original code: IO
+        # Pytorch: OI
+        axis = 1
+        keepdims = True
+    elif len(x.shape) == 4: # Conv kernels
+        # Original code: HWIO
+        # Pytorch: OIHW
+        axis = [1, 2, 3]
+        keepdims = True
+    else:
+        raise ValueError(f'Got a parameter with len(shape) not in [1, 2, 3, 4]! {x}')
+
+    return torch.sqrt(torch.sum(torch.square(x), axis=axis, keepdim=keepdims))
 
 class SGD_AGC(Optimizer):
     def __init__(self, named_params, lr:float, momentum=0, dampening=0,

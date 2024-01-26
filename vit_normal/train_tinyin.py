@@ -19,6 +19,7 @@ from torch.utils.data import Dataset, DataLoader, random_split
 import torchvision
 import torchvision.transforms as transforms
 from torchvision.transforms import ToTensor
+from utils.optim import SGD_AGC
 
 from datasets import load_dataset
 
@@ -30,9 +31,12 @@ import pickle
 import time
 
 from models import *
-from utils import progress_bar
+from utils.utils import progress_bar
 from randomaug import RandAugment
 from models.vit import ViT
+from models.vit_no_ln_with_init import ViT_no_ln_with_init
+from models.vit_no_ln import ViT_no_ln
+from models.vit_ws import ViT_ws
 
 # parsers
 parser = argparse.ArgumentParser(description='PyTorch Tiny ImageNet Training')
@@ -161,63 +165,43 @@ elif args.net=="vit_ti":
     dropout = 0.1,
     emb_dropout = 0.1
 )
-# elif args.net=="vit_small":
-#     from models.vit_small import ViT
-#     net = ViT(
-#     image_size = size,
-#     patch_size = args.patch,
-#     num_classes = num_classes,
-#     dim = 384,
-#     depth = 12,
-#     heads = 6,
-#     mlp_dim = 1536,
-#     dropout = 0.1,
-#     emb_dropout = 0.1
-# )
-# elif args.net=="simplevit":
-#     from models.simplevit import SimpleViT
-#     net = SimpleViT(
-#     image_size = size,
-#     patch_size = args.patch,
-#     num_classes = 10,
-#     dim = int(args.dimhead),
-#     depth = 6,
-#     heads = 8,
-#     mlp_dim = 512
-# )
-# elif args.net=="vit":
-#     # ViT for cifar10
-#     net = ViT(
-#     image_size = size,
-#     patch_size = args.patch,
-#     num_classes = 10,
-#     dim = int(args.dimhead),
-#     depth = 6,
-#     heads = 8,
-#     mlp_dim = 512,
-#     dropout = 0.1,
-#     emb_dropout = 0.1
-# )
-# elif args.net=="vit_timm":
-#     import timm
-#     net = timm.create_model("vit_base_patch16_384", pretrained=True)
-#     net.head = nn.Linear(net.head.in_features, 10)
-# elif args.net=="cait":
-#     from models.cait import CaiT
-#     net = CaiT(
-#     image_size = size,
-#     patch_size = args.patch,
-#     num_classes = 10,
-#     dim = int(args.dimhead),
-#     depth = 6,   # depth of transformer for patch to patch attention only
-#     cls_depth=2, # depth of cross attention of CLS tokens to patch
-#     heads = 8,
-#     mlp_dim = 512,
-#     dropout = 0.1,
-#     emb_dropout = 0.1,
-#     layer_dropout = 0.05
-# )
-
+elif args.net=="vit_ws":
+    net = ViT_ws(
+    image_size = size,
+    patch_size = args.patch,
+    num_classes = num_classes,
+    dim = 384,
+    depth = 12,
+    heads = 6,
+    mlp_dim = 1536,
+    dropout = 0.1,
+    emb_dropout = 0.1
+)
+elif args.net=="vit_no_ln_s":
+    net = ViT_no_ln(
+    image_size = size,
+    patch_size = args.patch,
+    num_classes = num_classes,
+    dim = 384,
+    depth = 12,
+    heads = 6,
+    mlp_dim = 1536,
+    dropout = 0.1,
+    emb_dropout = 0.1
+)
+elif args.net=="vit_no_ln_with_init_s":
+    net = ViT_no_ln_with_init(
+    image_size = size,
+    patch_size = args.patch,
+    num_classes = num_classes,
+    dim = 384,
+    depth = 12,
+    heads = 6,
+    mlp_dim = 1536,
+    dropout = 0.1,
+    emb_dropout = 0.1
+)
+    
 # For Multi-GPU
 if 'cuda' in device:
     print(device)
@@ -241,6 +225,28 @@ if args.opt == "adam":
     optimizer = optim.Adam(net.parameters(), lr=args.lr)
 elif args.opt == "sgd":
     optimizer = optim.SGD(net.parameters(), lr=args.lr)  
+elif args.opt == "sgd_momentum":
+    optimizer = SGD_AGC(
+        # The optimizer needs all parameter names
+        # to filter them by hand later
+        named_params=net.named_parameters(),
+        lr=args.lr,
+        momentum=0.9,
+        clipping=None,
+        weight_decay=2e-5,
+        nesterov=True
+    )
+elif args.opt == "sgd_agc":
+    optimizer = SGD_AGC(
+        # The optimizer needs all parameter names
+        # to filter them by hand later
+        named_params=net.named_parameters(),
+        lr=args.lr,
+        momentum=0.9,
+        clipping=0.1,
+        weight_decay=2e-5,
+        nesterov=True
+    )
     
 # use cosine scheduling
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.n_epochs)
